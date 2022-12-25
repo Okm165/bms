@@ -183,7 +183,7 @@ flash:
 #######################################
 
 format:
-	clang-format -i $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]')))
+	clang-format -i -style=file --verbose $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]')))
   
 
 #######################################
