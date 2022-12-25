@@ -41,18 +41,18 @@ INCLUDES =  \
 	Middlewares/Third_Party/FreeRTOS_Plus_TCP/source/portable/Compiler/GCC \
 	Middlewares/Third_Party/enc28j60/include
 
-C_INCLUDES = $(sort $(addprefix -I, $(INCLUDES)))
+C_INCLUDES = $(addprefix -I, $(INCLUDES))
 
 
 ######################################
 # source
 ######################################
 
-SUBDIR = Core/Src Middlewares/Third_Party Drivers
+SUBDIR = Core Middlewares/Third_Party Drivers
 
 C_SOURCES = $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.c')))
 CPP_SOURCES = $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.cpp')))
-ASM_SOURCES = $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.s')))
+ASM_SOURCES = startup_stm32l476xx.s
 
 #######################################
 # binaries
@@ -183,10 +183,7 @@ flash:
 #######################################
 
 format:
-	clang-format $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]')))
-  
-test:
-	$(info    VAR is $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]'))))
+	clang-format -i $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]')))
   
 
 #######################################

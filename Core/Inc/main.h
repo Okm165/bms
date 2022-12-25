@@ -23,8 +23,7 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -32,36 +31,36 @@ extern "C"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
-#include "string.h"
 #include "FreeRTOS.h"
 #include "FreeRTOS_IP.h"
 #include "FreeRTOS_IP_Private.h"
 #include "FreeRTOS_Sockets.h"
+#include "stdio.h"
+#include "string.h"
 
-  /* USER CODE END Includes */
+/* USER CODE END Includes */
 
-  /* Exported types ------------------------------------------------------------*/
-  /* USER CODE BEGIN ET */
-  extern I2C_HandleTypeDef hi2c1;
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+extern I2C_HandleTypeDef hi2c1;
 
-  extern SPI_HandleTypeDef hspi2;
+extern SPI_HandleTypeDef hspi2;
 
-  extern UART_HandleTypeDef huart2;
-  /* USER CODE END ET */
+extern UART_HandleTypeDef huart2;
+/* USER CODE END ET */
 
-  /* Exported constants --------------------------------------------------------*/
-  /* USER CODE BEGIN EC */
-  extern uint8_t ucMACAddress[6];
-  /* USER CODE END EC */
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+extern uint8_t ucMACAddress[6];
+/* USER CODE END EC */
 
-  /* Exported macro ------------------------------------------------------------*/
-  /* USER CODE BEGIN EM */
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
 
-  /* USER CODE END EM */
+/* USER CODE END EM */
 
-  /* Exported functions prototypes ---------------------------------------------*/
-  void Error_Handler(void);
+/* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -100,7 +99,7 @@ extern "C"
 #define BQ_SCL_GPIO_Port GPIOB
 #define BQ_SDA_Pin GPIO_PIN_7
 #define BQ_SDA_GPIO_Port GPIOB
-  /* USER CODE BEGIN Private defines */
+/* USER CODE BEGIN Private defines */
 
 #define DEBUG
 
@@ -109,14 +108,14 @@ extern "C"
 
 #define debug(format, ...) printf(format, ##__VA_ARGS__)
 
-  /*
-   * Disable STDOUT buffering to enable printing before a newline
-   * character or buffer flush.
-   */
+/*
+ * Disable STDOUT buffering to enable printing before a newline
+ * character or buffer flush.
+ */
 #else
 #define debug(format, ...)
 #endif /* DEBUG */
-  /* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

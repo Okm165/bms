@@ -2,22 +2,23 @@
  * FreeRTOS Common V1.1.3
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 /**
@@ -38,7 +39,8 @@
  * All log messages with a level at or below the specified level will be printed
  * for that library.
  *
- * Currently, there are 4 log levels. In the order of lowest to highest, they are:
+ * Currently, there are 4 log levels. In the order of lowest to highest, they
+ * are:
  * - #LOG_NONE <br>
  *   @copybrief LOG_NONE
  * - #LOG_ERROR <br>
@@ -57,18 +59,18 @@
  * When @ref LIBRARY_LOG_LEVEL is #LOG_NONE, logging is disabled and no
  * logging messages are printed.
  */
-#define LOG_NONE     0
+#define LOG_NONE 0
 
 /**
  * @brief Represents erroneous application state or event.
  *
- * These messages describe the situations when a library encounters an error from
- * which it cannot recover.
+ * These messages describe the situations when a library encounters an error
+ * from which it cannot recover.
  *
  * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
  * of #LOG_ERROR, #LOG_WARN, #LOG_INFO or #LOG_DEBUG.
  */
-#define LOG_ERROR    1
+#define LOG_ERROR 1
 
 /**
  * @brief Message about an abnormal event.
@@ -80,7 +82,7 @@
  * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
  * of #LOG_WARN, #LOG_INFO or #LOG_DEBUG.
  */
-#define LOG_WARN     2
+#define LOG_WARN 2
 
 /**
  * @brief A helpful, informational message.
@@ -91,7 +93,7 @@
  * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
  * of #LOG_INFO or #LOG_DEBUG.
  */
-#define LOG_INFO     3
+#define LOG_INFO 3
 
 /**
  * @brief Detailed and excessive debug information.
@@ -104,6 +106,6 @@
  * These messages are only printed when @ref LIBRARY_LOG_LEVEL is defined as
  * #LOG_DEBUG.
  */
-#define LOG_DEBUG    4
+#define LOG_DEBUG 4
 
 #endif /* ifndef LOGGING_LEVELS_H_ */

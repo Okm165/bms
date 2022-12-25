@@ -19,8 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "enc28j60.h"
 #include "echoserver.h"
+#include "enc28j60.h"
 #include "logging/logging.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -84,15 +84,15 @@ const uint8_t ucDNSServerAddress[4] = {208, 67, 222, 222};
  * @brief  The application entry point.
  * @retval int
  */
-int main(void)
-{
+int main(void) {
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
+   */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -117,13 +117,8 @@ int main(void)
   LogDebug("CPU GPIO initialized\n");
   /* USER CODE END 2 */
 
-
-  FreeRTOS_IPInit(ucIPAddress,
-                  ucNetMask,
-                  ucGatewayAddress,
-                  ucDNSServerAddress,
+  FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
                   ucMACAddress);
-
 
   /* Start scheduler */
   LogDebug("starting scheduler\n");
@@ -133,44 +128,31 @@ int main(void)
   Error_Handler();
 }
 
-void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent)
-{
+void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent) {
   uint32_t ulIPAddress, ulNetMask, ulGatewayAddress, ulDNSServerAddress;
   static BaseType_t xTasksAlreadyCreated = pdFALSE;
   char cBuffer[16];
 
   /* Both eNetworkUp and eNetworkDown events can be processed here. */
-  if (eNetworkEvent == eNetworkUp)
-  {
+  if (eNetworkEvent == eNetworkUp) {
     LogInfo("Link Up");
     /* Create the tasks that use the TCP/IP stack if they have not already
     been created. */
-    if (xTasksAlreadyCreated == pdFALSE)
-    {
+    if (xTasksAlreadyCreated == pdFALSE) {
       /* Create the task(s) */
 
-      xTaskCreate(debugEthernetInterface,
-                  "debugEthernetInterface",
-                  512,
-                  NULL,
-                  3,
-                  NULL);
+      xTaskCreate(debugEthernetInterface, "debugEthernetInterface", 512, NULL,
+                  3, NULL);
 
-      xTaskCreate(vStartSimpleTCPServerTasks,
-                  "httpServerTask",
-                  1024,
-                  NULL,
-                  3,
+      xTaskCreate(vStartSimpleTCPServerTasks, "httpServerTask", 1024, NULL, 3,
                   NULL);
 
       xTasksAlreadyCreated = pdTRUE;
     }
     /* The network is up and configured.  Print out the configuration,
    which may have been obtained from a DHCP server. */
-    FreeRTOS_GetAddressConfiguration(&ulIPAddress,
-                                     &ulNetMask,
-                                     &ulGatewayAddress,
-                                     &ulDNSServerAddress);
+    FreeRTOS_GetAddressConfiguration(&ulIPAddress, &ulNetMask,
+                                     &ulGatewayAddress, &ulDNSServerAddress);
 
     /* Convert the IP address to a string then print it out. */
     FreeRTOS_inet_ntoa(ulIPAddress, cBuffer);
@@ -184,32 +166,31 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent)
     FreeRTOS_inet_ntoa(ulGatewayAddress, cBuffer);
     LogInfo("Gateway IP Address: %s", cBuffer);
 
-    /* Convert the IP address of the DNS server to a string then print it out. */
+    /* Convert the IP address of the DNS server to a string then print it out.
+     */
     FreeRTOS_inet_ntoa(ulDNSServerAddress, cBuffer);
     LogInfo("DNS server IP Address: %s", cBuffer);
 
     LogInfo("Network interface revision_id %#02x", enc28j60_rcr(EREVID));
     LogInfo("MAC address %02x:%02x:%02x:%02x:%02x:%02x filter: %x\n",
-        enc28j60_rcr(MAADR5), enc28j60_rcr(MAADR4), enc28j60_rcr(MAADR3),
-        enc28j60_rcr(MAADR2), enc28j60_rcr(MAADR1), enc28j60_rcr(MAADR0),
-        enc28j60_rcr(ERXFCON));
-    
-  }
-  else
-  {
+            enc28j60_rcr(MAADR5), enc28j60_rcr(MAADR4), enc28j60_rcr(MAADR3),
+            enc28j60_rcr(MAADR2), enc28j60_rcr(MAADR1), enc28j60_rcr(MAADR0),
+            enc28j60_rcr(ERXFCON));
+
+  } else {
     LogWarn("Link Down");
   }
 }
 
-void debugEthernetInterface(void *argument)
-{
+void debugEthernetInterface(void *argument) {
   vTaskSuspendAll();
   // LogDebug("enc28j60: init\n");
   // enc28j60_init(ucMACAddress);
   uint8_t revision_id = 0;
   revision_id = enc28j60_rcr(EREVID);
   debug("enc28j60: revision %#02x\n", revision_id);
-  debug("enc28j60: checked MAC address %02x:%02x:%02x:%02x:%02x:%02x filter: %x\n",
+  debug("enc28j60: checked MAC address %02x:%02x:%02x:%02x:%02x:%02x filter: "
+        "%x\n",
         enc28j60_rcr(MAADR5), enc28j60_rcr(MAADR4), enc28j60_rcr(MAADR3),
         enc28j60_rcr(MAADR2), enc28j60_rcr(MAADR1), enc28j60_rcr(MAADR0),
         enc28j60_rcr(ERXFCON));
@@ -222,15 +203,13 @@ void debugEthernetInterface(void *argument)
  * @brief System Clock Configuration
  * @retval None
  */
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
    */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
-  {
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK) {
     Error_Handler();
   }
 
@@ -247,21 +226,20 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
    */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
+                                RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) {
     Error_Handler();
   }
 }
@@ -271,8 +249,7 @@ void SystemClock_Config(void)
  * @param None
  * @retval None
  */
-static void MX_I2C1_Init(void)
-{
+static void MX_I2C1_Init(void) {
 
   /* USER CODE BEGIN I2C1_Init 0 */
 
@@ -290,22 +267,19 @@ static void MX_I2C1_Init(void)
   hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
     Error_Handler();
   }
 
   /** Configure Analogue filter
    */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
     Error_Handler();
   }
 
   /** Configure Digital filter
    */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN I2C1_Init 2 */
@@ -318,8 +292,7 @@ static void MX_I2C1_Init(void)
  * @param None
  * @retval None
  */
-static void MX_SPI2_Init(void)
-{
+static void MX_SPI2_Init(void) {
 
   /* USER CODE BEGIN SPI2_Init 0 */
 
@@ -343,8 +316,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CRCPolynomial = 7;
   hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
   hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
-  {
+  if (HAL_SPI_Init(&hspi2) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN SPI2_Init 2 */
@@ -357,8 +329,7 @@ static void MX_SPI2_Init(void)
  * @param None
  * @retval None
  */
-static void MX_USART2_UART_Init(void)
-{
+static void MX_USART2_UART_Init(void) {
 
   /* USER CODE BEGIN USART2_Init 0 */
 
@@ -377,8 +348,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
+  if (HAL_UART_Init(&huart2) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
@@ -391,8 +361,7 @@ static void MX_USART2_UART_Init(void)
  * @param None
  * @retval None
  */
-static void MX_GPIO_Init(void)
-{
+static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
@@ -463,13 +432,11 @@ static void MX_GPIO_Init(void)
  * @param  htim : TIM handle
  * @retval None
  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1)
-  {
+  if (htim->Instance == TIM1) {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -477,12 +444,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 1 */
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   // This function is called for every EXTI event so
   // we need first to sort out which pin sourced it
-  if (GPIO_Pin == ENC_INT_Pin)
-  {
+  if (GPIO_Pin == ENC_INT_Pin) {
     ENC_IRQHandler();
   }
 }
@@ -491,14 +456,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
-void Error_Handler(void)
-{
+void Error_Handler(void) {
   /* USER CODE BEGIN Error_Handler_Debug */
   printf("This function is executed in case of error occurrence\n");
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
+  while (1) {
   }
   /* USER CODE END Error_Handler_Debug */
 }
@@ -511,11 +474,11 @@ void Error_Handler(void)
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
+void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* User can add his own implementation to report the file name and line
+     number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
+     line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

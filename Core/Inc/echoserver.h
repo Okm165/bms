@@ -7,8 +7,8 @@
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
-#include "task.h"
 #include "semphr.h"
+#include "task.h"
 
 /* FreeRTOS+TCP includes. */
 #include "FreeRTOS_IP.h"
@@ -28,8 +28,8 @@
 /* If ipconfigUSE_TCP_WIN is 1 then the Tx sockets will use a buffer size set by
 ipconfigTCP_TX_BUFFER_LENGTH, and the Tx window size will be
 configECHO_SERVER_TX_WINDOW_SIZE times the buffer size.  Note
-ipconfigTCP_TX_BUFFER_LENGTH is set in FreeRTOSIPConfig.h as it is a standard TCP/IP
-stack constant, whereas configECHO_SERVER_TX_WINDOW_SIZE is set in
+ipconfigTCP_TX_BUFFER_LENGTH is set in FreeRTOSIPConfig.h as it is a standard
+TCP/IP stack constant, whereas configECHO_SERVER_TX_WINDOW_SIZE is set in
 FreeRTOSConfig.h as it is a demo application constant. */
 #ifndef configECHO_SERVER_TX_WINDOW_SIZE
 #define configECHO_SERVER_TX_WINDOW_SIZE 2
@@ -38,8 +38,8 @@ FreeRTOSConfig.h as it is a demo application constant. */
 /* If ipconfigUSE_TCP_WIN is 1 then the Rx sockets will use a buffer size set by
 ipconfigTCP_RX_BUFFER_LENGTH, and the Rx window size will be
 configECHO_SERVER_RX_WINDOW_SIZE times the buffer size.  Note
-ipconfigTCP_RX_BUFFER_LENGTH is set in FreeRTOSIPConfig.h as it is a standard TCP/IP
-stack constant, whereas configECHO_SERVER_RX_WINDOW_SIZE is set in
+ipconfigTCP_RX_BUFFER_LENGTH is set in FreeRTOSIPConfig.h as it is a standard
+TCP/IP stack constant, whereas configECHO_SERVER_RX_WINDOW_SIZE is set in
 FreeRTOSConfig.h as it is a demo application constant. */
 #ifndef configECHO_SERVER_RX_WINDOW_SIZE
 #define configECHO_SERVER_RX_WINDOW_SIZE 2

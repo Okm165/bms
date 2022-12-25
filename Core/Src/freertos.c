@@ -18,15 +18,14 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS.h"
 #include "main.h"
 #include "task.h"
-#include "FreeRTOS.h"
 
 /* Used by the pseudo random number generator. */
 static UBaseType_t ulNextRand = 1;
 
-UBaseType_t uxRand(void)
-{
+UBaseType_t uxRand(void) {
   const uint32_t ulMultiplier = 0x015a4e35UL, ulIncrement = 1UL;
 
   /*
@@ -46,11 +45,9 @@ UBaseType_t uxRand(void)
  * THAT RETURNS A PSEUDO RANDOM NUMBER SO IS NOT INTENDED FOR USE IN PRODUCTION
  * SYSTEMS.
  */
-extern uint32_t ulApplicationGetNextSequenceNumber(uint32_t ulSourceAddress,
-                                                   uint16_t usSourcePort,
-                                                   uint32_t ulDestinationAddress,
-                                                   uint16_t usDestinationPort)
-{
+extern uint32_t ulApplicationGetNextSequenceNumber(
+    uint32_t ulSourceAddress, uint16_t usSourcePort,
+    uint32_t ulDestinationAddress, uint16_t usDestinationPort) {
   (void)ulSourceAddress;
   (void)usSourcePort;
   (void)ulDestinationAddress;
@@ -67,23 +64,21 @@ extern uint32_t ulApplicationGetNextSequenceNumber(uint32_t ulSourceAddress,
  * THIS IS ONLY A DUMMY IMPLEMENTATION THAT RETURNS A PSEUDO RANDOM NUMBER SO IS
  * NOT INTENDED FOR USE IN PRODUCTION SYSTEMS.
  */
-BaseType_t xApplicationGetRandomNumber(uint32_t *pulNumber)
-{
+BaseType_t xApplicationGetRandomNumber(uint32_t *pulNumber) {
   *pulNumber = uxRand();
   return pdTRUE;
 }
 /*-----------------------------------------------------------*/
 
 /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
- * implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
- * used by the Idle task. */
+ * implementation of vApplicationGetIdleTaskMemory() to provide the memory that
+ * is used by the Idle task. */
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
                                    StackType_t **ppxIdleTaskStackBuffer,
-                                   uint32_t *pulIdleTaskStackSize)
-{
+                                   uint32_t *pulIdleTaskStackSize) {
   /* If the buffers to be provided to the Idle task are declared inside this
-   * function then they must be declared static - otherwise they will be allocated on
-   * the stack and so not exists after this function exits. */
+   * function then they must be declared static - otherwise they will be
+   * allocated on the stack and so not exists after this function exits. */
   static StaticTask_t xIdleTaskTCB;
   static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
@@ -102,15 +97,15 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
 /*-----------------------------------------------------------*/
 
 /* configUSE_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
- * application must provide an implementation of vApplicationGetTimerTaskMemory()
- * to provide the memory that is used by the Timer service task. */
+ * application must provide an implementation of
+ * vApplicationGetTimerTaskMemory() to provide the memory that is used by the
+ * Timer service task. */
 void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
                                     StackType_t **ppxTimerTaskStackBuffer,
-                                    uint32_t *pulTimerTaskStackSize)
-{
+                                    uint32_t *pulTimerTaskStackSize) {
   /* If the buffers to be provided to the Timer task are declared inside this
-   * function then they must be declared static - otherwise they will be allocated on
-   * the stack and so not exists after this function exits. */
+   * function then they must be declared static - otherwise they will be
+   * allocated on the stack and so not exists after this function exits. */
   static StaticTask_t xTimerTaskTCB;
   static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
