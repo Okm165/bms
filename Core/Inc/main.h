@@ -102,7 +102,7 @@ extern "C"
 #define BQ_SDA_GPIO_Port GPIOB
   /* USER CODE BEGIN Private defines */
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include <stdio.h>

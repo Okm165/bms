@@ -4,11 +4,13 @@
 void vStartSimpleTCPServerTasks( void* pvParameters )
 {
 	/* Create the TCP echo server. */
-	xTaskCreate( prvConnectionListeningTask, "ServerListener", 128, NULL, tskIDLE_PRIORITY, NULL );
+	debug("starting ServerListener\n");
+	xTaskCreate( prvConnectionListeningTask, "ServerListener", 512, NULL, 3, NULL );
 
 	/* Remember the requested stack size so it can be re-used by the server
 	listening task when it creates tasks to handle connections. */
 	// usUsedStackSize = usStackSize;
+	vTaskDelete(NULL);
 }
 /*-----------------------------------------------------------*/
 
@@ -63,6 +65,7 @@ const BaseType_t xBacklog = 20;
 		/* Spawn a task to handle the connection. */
 		xTaskCreate( prvServerConnectionInstance, "EchoServer", 128, ( void * ) xConnectedSocket, tskIDLE_PRIORITY, NULL );
 	}
+	vTaskDelete(NULL);
 }
 /*-----------------------------------------------------------*/
 

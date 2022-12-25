@@ -20,7 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "enc28j60.h"
-// #include "echoserver.h"
+#include "echoserver.h"
 #include "logging/logging.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -151,17 +151,17 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent)
 
       xTaskCreate(debugEthernetInterface,
                   "debugEthernetInterface",
-                  128,
+                  512,
                   NULL,
-                  1,
+                  3,
                   NULL);
 
-      // xTaskCreate(vStartSimpleTCPServerTasks,
-      //             "httpServerTask",
-      //             128,
-      //             NULL,
-      //             osPriorityNormal,
-      //             NULL);
+      xTaskCreate(vStartSimpleTCPServerTasks,
+                  "httpServerTask",
+                  1024,
+                  NULL,
+                  3,
+                  NULL);
 
       xTasksAlreadyCreated = pdTRUE;
     }
@@ -209,34 +209,6 @@ void debugEthernetInterface(void *argument)
 
   xTaskResumeAll();
   vTaskDelete(NULL);
-}
-
-eDHCPCallbackAnswer_t xApplicationDHCPHook(eDHCPCallbackPhase_t eDHCPPhase, uint32_t ulIPAddress)
-{
-  eDHCPCallbackAnswer_t eAnswer = eDHCPContinue;
-
-  const char *name = "Unknown";
-  switch (eDHCPPhase)
-  {
-  case eDHCPPhasePreDiscover:
-  {
-    /* The library is about to look for a DHCP server. */
-    name = "Discover"; /* Driver is about to send a DHCP discovery. */
-                       //          eAnswer = eDHCPUseDefaults;
-    // LogDebug("eDHCPPhasePreDiscover");
-  }
-  break;
-  case eDHCPPhasePreRequest:
-  {
-    /* The DHCP server has made an offer to use `ulIPAddress` */
-    name = "Request"; /* Driver is about to request DHCP an IP address. */
-                      //          eAnswer = eDHCPUseDefaults;
-    // LogDebug("eDHCPPhasePreRequest");
-  }
-  break;
-  }
-  // LogDebug("DHCP Done");
-  return eAnswer;
 }
 
 /**
