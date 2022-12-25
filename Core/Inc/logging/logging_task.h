@@ -28,8 +28,8 @@
  * @brief Logging task interface.
  */
 
-#ifndef AWS_LOGGING_TASK_H
-#define AWS_LOGGING_TASK_H
+#ifndef LOGGING_TASK_H
+#define LOGGING_TASK_H
 
 #ifndef INC_FREERTOS_H
     #error "include FreeRTOS.h must appear in source files before include logging_task.h"

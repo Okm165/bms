@@ -29,8 +29,8 @@
  * @brief Utility header file that exposes macros for configuring logging implementation of logging macros (LogError, LogWarn, LogInfo, LogDebug).
  */
 
-#ifndef LOGGING_STACK_H
-#define LOGGING_STACK_H
+#ifndef LOGGING_H
+#define LOGGING_H
 
 /* Include header for logging level macros. */
 #include "logging_levels.h"

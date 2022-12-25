@@ -142,7 +142,7 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent)
   /* Both eNetworkUp and eNetworkDown events can be processed here. */
   if (eNetworkEvent == eNetworkUp)
   {
-    LogInfo("Network Up");
+    LogInfo("Link Up");
     /* Create the tasks that use the TCP/IP stack if they have not already
     been created. */
     if (xTasksAlreadyCreated == pdFALSE)
@@ -187,10 +187,17 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent)
     /* Convert the IP address of the DNS server to a string then print it out. */
     FreeRTOS_inet_ntoa(ulDNSServerAddress, cBuffer);
     LogInfo("DNS server IP Address: %s", cBuffer);
+
+    LogInfo("Network interface revision_id %#02x", enc28j60_rcr(EREVID));
+    LogInfo("MAC address %02x:%02x:%02x:%02x:%02x:%02x filter: %x\n",
+        enc28j60_rcr(MAADR5), enc28j60_rcr(MAADR4), enc28j60_rcr(MAADR3),
+        enc28j60_rcr(MAADR2), enc28j60_rcr(MAADR1), enc28j60_rcr(MAADR0),
+        enc28j60_rcr(ERXFCON));
+    
   }
   else
   {
-    LogWarn("Network Down");
+    LogWarn("Link Down");
   }
 }
 

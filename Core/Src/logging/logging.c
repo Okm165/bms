@@ -23,9 +23,6 @@
  * http://www.FreeRTOS.org
  */
 
-#ifndef LOGGING_TASK_H
-#define LOGGING_TASK_H
-
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -411,5 +408,3 @@ void vLoggingPrint( const char * pcMessage )
 }
 
 /*-----------------------------------------------------------*/
-
-#endif
