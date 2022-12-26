@@ -22,6 +22,7 @@
 #include "echoserver.h"
 #include "enc28j60.h"
 #include "logging/logging.h"
+#include "logging/test.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -115,6 +116,9 @@ int main(void) {
   xLoggingTaskInitialize(1024, 1, 1024);
 
   LogDebug("CPU GPIO initialized\n");
+
+  cpp_fun();
+
   /* USER CODE END 2 */
 
   FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
