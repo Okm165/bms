@@ -1,7 +1,7 @@
 ######################################
 # target
 ######################################
-TARGET = rtos_tcp_enc_bq
+TARGET = bms_operating_system
 
 
 ######################################
@@ -32,6 +32,8 @@ AS_INCLUDES =  \
 # C includes
 C_INCLUDES_DIRS =  \
 	Core/Inc \
+	Core/Inc/logging \
+	Core/Inc/tcp_server \
 	Drivers/STM32L4xx_HAL_Driver/Inc \
 	Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
 	Drivers/CMSIS/Include \
@@ -185,7 +187,7 @@ flash:
 #######################################
 
 format:
-	clang-format -i -style=file --verbose $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name '*.[c, cpp, h, hpp]')))
+	clang-format -i -style=file --verbose $(sort $(foreach fd, $(SUBDIR), $(shell find $(fd) -name "*.h" -or -name "*.cpp" -or -name "*.c" -or -name "*.hpp")))
   
 
 #######################################

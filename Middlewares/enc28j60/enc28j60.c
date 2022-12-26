@@ -1,5 +1,5 @@
 #include "enc28j60.h"
-#include "logging/logging.h"
+#include "log.h"
 #include "main.h"
 
 // private functions declarations

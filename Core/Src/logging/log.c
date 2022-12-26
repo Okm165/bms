@@ -31,7 +31,7 @@
 #include "task.h"
 
 /* Logging includes. */
-#include "logging/logging.h"
+#include "log.h"
 
 /* Standard includes. */
 #include <stdarg.h>

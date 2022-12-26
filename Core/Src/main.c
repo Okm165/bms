@@ -21,8 +21,7 @@
 #include "cmsis_os.h"
 #include "echoserver.h"
 #include "enc28j60.h"
-#include "logging/logging.h"
-#include "logging/test.h"
+#include "log.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -64,7 +63,6 @@ static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
-void debugEthernetInterface(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -86,45 +84,21 @@ const uint8_t ucDNSServerAddress[4] = {208, 67, 222, 222};
  * @retval int
  */
 int main(void) {
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
-   */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
+
   xLoggingTaskInitialize(1024, 1, 1024);
 
-  LogDebug("CPU GPIO initialized\n");
-
-  cpp_fun();
-
-  /* USER CODE END 2 */
+  LogDebug("CPU, GPIO initialized\n");
 
   FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
                   ucMACAddress);
 
-  /* Start scheduler */
   LogDebug("starting scheduler\n");
   vTaskStartScheduler();
 
@@ -145,11 +119,8 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent) {
     if (xTasksAlreadyCreated == pdFALSE) {
       /* Create the task(s) */
 
-      xTaskCreate(debugEthernetInterface, "debugEthernetInterface", 512, NULL,
-                  3, NULL);
-
-      xTaskCreate(vStartSimpleTCPServerTasks, "httpServerTask", 1024, NULL, 3,
-                  NULL);
+      xTaskCreate(vStartSimpleEchoServer, "echo_server", 1024, NULL,
+                  osPriorityNormal, NULL);
 
       xTasksAlreadyCreated = pdTRUE;
     }
@@ -184,23 +155,6 @@ void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent) {
   } else {
     LogWarn("Link Down");
   }
-}
-
-void debugEthernetInterface(void *argument) {
-  vTaskSuspendAll();
-  // LogDebug("enc28j60: init\n");
-  // enc28j60_init(ucMACAddress);
-  uint8_t revision_id = 0;
-  revision_id = enc28j60_rcr(EREVID);
-  debug("enc28j60: revision %#02x\n", revision_id);
-  debug("enc28j60: checked MAC address %02x:%02x:%02x:%02x:%02x:%02x filter: "
-        "%x\n",
-        enc28j60_rcr(MAADR5), enc28j60_rcr(MAADR4), enc28j60_rcr(MAADR3),
-        enc28j60_rcr(MAADR2), enc28j60_rcr(MAADR1), enc28j60_rcr(MAADR0),
-        enc28j60_rcr(ERXFCON));
-
-  xTaskResumeAll();
-  vTaskDelete(NULL);
 }
 
 /**
