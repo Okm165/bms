@@ -105,11 +105,11 @@ public:
 
     for (;;) {
       /* Wait for a client to connect. */
-      xConnectedSocket = FreeRTOS_accept(xListeningSocket, &xClient, &xSize);
+      Socket_t socket = FreeRTOS_accept(xListeningSocket, &xClient, &xSize);
       configASSERT(xConnectedSocket != FREERTOS_INVALID_SOCKET);
 
       /* Spawn a task to handle the connection. */
-      xTaskCreate(_task_accept, NULL, 256, this, _taskPriority, NULL);
+      xTaskCreate(_task_accept, NULL, 256, socket, _taskPriority, NULL);
     }
   }
 
@@ -117,10 +117,10 @@ public:
 
 private:
   static void _task_accept(void *_param) {
-    static_cast<TcpServer *>(_param)->task_accept((TcpServer *)_param);
+    static_cast<TcpServer *>(_param)->task_accept((Socket_t)_param);
   }
 
-  void task_accept(TcpServer *conn) {
+  void task_accept(Socket_t socket) {
     int32_t lBytes;
     const TickType_t xReceiveTimeOut = pdMS_TO_TICKS(5000);
     const TickType_t xSendTimeOut = pdMS_TO_TICKS(5000);
@@ -133,10 +133,10 @@ private:
     pucRxBuffer = (uint8_t *)pvPortMalloc(ipconfigTCP_MSS);
 
     if (pucRxBuffer != NULL) {
-      FreeRTOS_setsockopt(conn->xConnectedSocket, 0, FREERTOS_SO_RCVTIMEO,
-                          &xReceiveTimeOut, sizeof(xReceiveTimeOut));
-      FreeRTOS_setsockopt(conn->xConnectedSocket, 0, FREERTOS_SO_SNDTIMEO,
-                          &xSendTimeOut, sizeof(xReceiveTimeOut));
+      FreeRTOS_setsockopt(socket, 0, FREERTOS_SO_RCVTIMEO, &xReceiveTimeOut,
+                          sizeof(xReceiveTimeOut));
+      FreeRTOS_setsockopt(socket, 0, FREERTOS_SO_SNDTIMEO, &xSendTimeOut,
+                          sizeof(xReceiveTimeOut));
 
       for (;;) {
         /* Zero out the receive array so there is NULL at the end of the string
@@ -144,12 +144,19 @@ private:
         memset(pucRxBuffer, 0x00, ipconfigTCP_MSS);
 
         /* Receive data on the socket. */
-        lBytes = FreeRTOS_recv(conn->xConnectedSocket, pucRxBuffer,
-                               ipconfigTCP_MSS, 0);
+        lBytes = FreeRTOS_recv(socket, pucRxBuffer, ipconfigTCP_MSS, 0);
 
         /* If data was received */
         if (lBytes >= 0) {
-          conn->onReceive(conn->xConnectedSocket, pucRxBuffer, lBytes);
+          // conn->onReceive(socket, pucRxBuffer, lBytes);
+          int32_t lSent = 0;
+          int32_t lTotalSent = 0;
+
+          /* Call send() until all the data has been sent. */
+          while ((lSent >= 0) && (lTotalSent < lBytes)) {
+            lSent = FreeRTOS_send(socket, pucRxBuffer, lBytes - lTotalSent, 0);
+            lTotalSent += lSent;
+          }
         } else {
           /* Socket closed? */
           break;
@@ -158,21 +165,20 @@ private:
     }
 
     /* Initiate a shutdown in case it has not already been initiated. */
-    FreeRTOS_shutdown(conn->xConnectedSocket, FREERTOS_SHUT_RDWR);
+    FreeRTOS_shutdown(socket, FREERTOS_SHUT_RDWR);
 
     /* Wait for the shutdown to take effect, indicated by FreeRTOS_recv()
     returning an error. */
     xTimeOnShutdown = xTaskGetTickCount();
     do {
-      if (FreeRTOS_recv(conn->xConnectedSocket, pucRxBuffer, ipconfigTCP_MSS,
-                        0) < 0) {
+      if (FreeRTOS_recv(socket, pucRxBuffer, ipconfigTCP_MSS, 0) < 0) {
         break;
       }
     } while ((xTaskGetTickCount() - xTimeOnShutdown) < tcpechoSHUTDOWN_DELAY);
 
     /* Finished with the socket, buffer, the task. */
     vPortFree(pucRxBuffer);
-    FreeRTOS_closesocket(conn->xConnectedSocket);
+    FreeRTOS_closesocket(socket);
 
     vTaskDelete(NULL);
   }
