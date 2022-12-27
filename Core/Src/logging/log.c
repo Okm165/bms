@@ -208,6 +208,22 @@ static void prvLoggingPrintfCommon(uint8_t usLoggingLevel, const char *pcFormat,
     const char *pcLevelString = NULL;
     size_t ulFormatLen = 0UL;
 
+    const char *pcTaskName;
+    const char *pcNoTask = "None";
+    static BaseType_t xMessageNumber = 0;
+
+    /* Add a time stamp and the name of the calling task to the
+     * start of the log. */
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+      pcTaskName = pcTaskGetName(NULL);
+    } else {
+      pcTaskName = pcNoTask;
+    }
+
+    xLength += snprintf_safe(pcPrintString, configLOGGING_MAX_MESSAGE_LENGTH,
+                             "%lu %lu [%s] ", (unsigned long)xMessageNumber++,
+                             (unsigned long)xTaskGetTickCount(), pcTaskName);
+
     /* Choose the string for the log level metadata for the log message. */
     switch (usLoggingLevel) {
     case LOG_ERROR:
