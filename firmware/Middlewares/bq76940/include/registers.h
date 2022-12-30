@@ -1,5 +1,5 @@
-#ifndef BQ769X0_REGISTERS_H_
-#define BQ769X0_REGISTERS_H_
+#ifndef _BQ769X0_REGISTERS_H_
+#define _BQ769X0_REGISTERS_H_
 
 #ifdef __cplusplus
 extern "C" {

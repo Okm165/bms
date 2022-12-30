@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "bms.h"
+#include "bq76940.h"
 #include "interface.h"
+#include "main.h"
 #include "registers.h"
 
 #include <math.h> // log for thermistor calculation
@@ -22,10 +23,7 @@
 
 // static void bms_update_balancing(Bms *bms);
 
-int bms_init_hardware(Bms *bms)
-{
-    return bq769x0_init();
-}
+int bms_init_hardware(Bms *bms) { return bq769x0_init(); }
 
 // void bms_update(Bms *bms)
 // {
@@ -41,7 +39,8 @@ int bms_init_hardware(Bms *bms)
 // void bms_set_error_flag(Bms *bms, uint32_t flag, bool value)
 // {
 //     // check if error flag changed
-//     if ((bms->status.error_flags & (1UL << flag)) != ((uint32_t)value << flag)) {
+//     if ((bms->status.error_flags & (1UL << flag)) != ((uint32_t)value <<
+//     flag)) {
 //         if (value) {
 //             bms->status.error_flags |= (1UL << flag);
 //         }
@@ -57,31 +56,39 @@ int bms_init_hardware(Bms *bms)
 // {
 //     float hyst;
 
-//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_CHG_OVERTEMP)) ? bms->conf.t_limit_hyst : 0;
-//     bool chg_overtemp = bms->status.bat_temp_max > bms->conf.chg_ot_limit - hyst;
+//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_CHG_OVERTEMP)) ?
+//     bms->conf.t_limit_hyst : 0; bool chg_overtemp = bms->status.bat_temp_max
+//     > bms->conf.chg_ot_limit - hyst;
 
-//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_CHG_UNDERTEMP)) ? bms->conf.t_limit_hyst : 0;
-//     bool chg_undertemp = bms->status.bat_temp_min < bms->conf.chg_ut_limit + hyst;
+//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_CHG_UNDERTEMP)) ?
+//     bms->conf.t_limit_hyst : 0; bool chg_undertemp = bms->status.bat_temp_min
+//     < bms->conf.chg_ut_limit + hyst;
 
-//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_DIS_OVERTEMP)) ? bms->conf.t_limit_hyst : 0;
-//     bool dis_overtemp = bms->status.bat_temp_max > bms->conf.dis_ot_limit - hyst;
+//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_DIS_OVERTEMP)) ?
+//     bms->conf.t_limit_hyst : 0; bool dis_overtemp = bms->status.bat_temp_max
+//     > bms->conf.dis_ot_limit - hyst;
 
-//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_DIS_OVERTEMP)) ? bms->conf.t_limit_hyst : 0;
-//     bool dis_undertemp = bms->status.bat_temp_min < bms->conf.dis_ut_limit + hyst;
+//     hyst = (bms->status.error_flags & (1UL << BMS_ERR_DIS_OVERTEMP)) ?
+//     bms->conf.t_limit_hyst : 0; bool dis_undertemp = bms->status.bat_temp_min
+//     < bms->conf.dis_ut_limit + hyst;
 
-//     if (chg_overtemp != (bool)(bms->status.error_flags & (1UL << BMS_ERR_CHG_OVERTEMP))) {
+//     if (chg_overtemp != (bool)(bms->status.error_flags & (1UL <<
+//     BMS_ERR_CHG_OVERTEMP))) {
 //         bms_set_error_flag(bms, BMS_ERR_CHG_OVERTEMP, chg_overtemp);
 //     }
 
-//     if (chg_undertemp != (bool)(bms->status.error_flags & (1UL << BMS_ERR_CHG_UNDERTEMP))) {
+//     if (chg_undertemp != (bool)(bms->status.error_flags & (1UL <<
+//     BMS_ERR_CHG_UNDERTEMP))) {
 //         bms_set_error_flag(bms, BMS_ERR_CHG_UNDERTEMP, chg_undertemp);
 //     }
 
-//     if (dis_overtemp != (bool)(bms->status.error_flags & (1UL << BMS_ERR_DIS_OVERTEMP))) {
+//     if (dis_overtemp != (bool)(bms->status.error_flags & (1UL <<
+//     BMS_ERR_DIS_OVERTEMP))) {
 //         bms_set_error_flag(bms, BMS_ERR_DIS_OVERTEMP, dis_overtemp);
 //     }
 
-//     if (dis_undertemp != (bool)(bms->status.error_flags & (1UL << BMS_ERR_DIS_UNDERTEMP))) {
+//     if (dis_undertemp != (bool)(bms->status.error_flags & (1UL <<
+//     BMS_ERR_DIS_UNDERTEMP))) {
 //         bms_set_error_flag(bms, BMS_ERR_DIS_UNDERTEMP, dis_undertemp);
 //     }
 // }
@@ -92,12 +99,11 @@ int bms_init_hardware(Bms *bms)
 //     return k_uptime_get() <= 10;
 // }
 
-void bms_shutdown(Bms *bms)
-{
-    // puts BMS IC into SHIP mode (i.e. switched off)
-    bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x0);
-    bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x1);
-    bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x2);
+void bms_shutdown(Bms *bms) {
+  // puts BMS IC into SHIP mode (i.e. switched off)
+  bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x0);
+  bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x1);
+  bq769x0_write_byte(BQ769X0_SYS_CTRL1, 0x2);
 }
 
 // int bms_chg_switch(Bms *bms, bool enable)
@@ -125,7 +131,8 @@ void bms_shutdown(Bms *bms)
 // int bms_apply_balancing_conf(Bms *bms)
 // {
 //     /*
-//      * Chip does not support automatic balancing. Switches are set by software in
+//      * Chip does not support automatic balancing. Switches are set by
+//      software in
 //      * bms_update_balancing
 //      */
 
@@ -149,23 +156,26 @@ void bms_shutdown(Bms *bms)
 //         && (bms->status.cell_voltage_max - bms->status.cell_voltage_min)
 //                > bms->conf.bal_cell_voltage_diff)
 //     {
-//         bms->status.balancing_status = 0; // current status will be set in following loop
+//         bms->status.balancing_status = 0; // current status will be set in
+//         following loop
 
 //         int balancing_flags;
 //         int balancing_flags_target;
 
 //         for (int section = 0; section < num_sections; section++) {
-//             // find cells which should be balanced and sort them by voltage descending
-//             int cell_list[5];
-//             int cell_counter = 0;
-//             for (int i = 0; i < 5; i++) {
-//                 if ((bms->status.cell_voltages[section * 5 + i] - bms->status.cell_voltage_min)
+//             // find cells which should be balanced and sort them by voltage
+//             descending int cell_list[5]; int cell_counter = 0; for (int i =
+//             0; i < 5; i++) {
+//                 if ((bms->status.cell_voltages[section * 5 + i] -
+//                 bms->status.cell_voltage_min)
 //                     > bms->conf.bal_cell_voltage_diff)
 //                 {
 //                     int j = cell_counter;
 //                     while (j > 0
-//                            && bms->status.cell_voltages[section * 5 + cell_list[j - 1]]
-//                                   < bms->status.cell_voltages[section * 5 + i])
+//                            && bms->status.cell_voltages[section * 5 +
+//                            cell_list[j - 1]]
+//                                   < bms->status.cell_voltages[section * 5 +
+//                                   i])
 //                     {
 //                         cell_list[j] = cell_list[j - 1];
 //                         j--;
@@ -178,18 +188,22 @@ void bms_shutdown(Bms *bms)
 //             balancing_flags = 0;
 //             for (int i = 0; i < cell_counter; i++) {
 //                 // try to enable balancing of current cell
-//                 balancing_flags_target = balancing_flags | (1 << cell_list[i]);
+//                 balancing_flags_target = balancing_flags | (1 <<
+//                 cell_list[i]);
 
 //                 // check if attempting to balance adjacent cells
-//                 bool adjacent_cell_collision = ((balancing_flags_target << 1) & balancing_flags)
-//                                                || ((balancing_flags << 1) & balancing_flags_target);
+//                 bool adjacent_cell_collision = ((balancing_flags_target << 1)
+//                 & balancing_flags)
+//                                                || ((balancing_flags << 1) &
+//                                                balancing_flags_target);
 
 //                 if (adjacent_cell_collision == false) {
 //                     balancing_flags = balancing_flags_target;
 //                 }
 //             }
 
-//             LOG_DEBUG("Setting CELLBAL%d register to: %s", section + 1, byte2bitstr(balancing_flags));
+//             LOG_DEBUG("Setting CELLBAL%d register to: %s", section + 1,
+//             byte2bitstr(balancing_flags));
 
 //             bms->status.balancing_status |= balancing_flags << section * 5;
 
@@ -218,7 +232,8 @@ void bms_shutdown(Bms *bms)
 
 //     protect1.SCD_THRESH = 0;
 //     for (int i = ARRAY_SIZE(SCD_threshold_setting) - 1; i > 0; i--) {
-//         if (bms->conf.dis_sc_limit * bms->conf.shunt_res_mOhm >= SCD_threshold_setting[i]) {
+//         if (bms->conf.dis_sc_limit * bms->conf.shunt_res_mOhm >=
+//         SCD_threshold_setting[i]) {
 //             protect1.SCD_THRESH = i;
 //             break;
 //         }
@@ -235,8 +250,9 @@ void bms_shutdown(Bms *bms)
 //     bq769x0_write_byte(BQ769X0_PROTECT1, protect1.byte);
 
 //     // store actually configured values
-//     bms->conf.dis_sc_limit = SCD_threshold_setting[protect1.SCD_THRESH] / bms->conf.shunt_res_mOhm;
-//     bms->conf.dis_sc_delay_us = SCD_delay_setting[protect1.SCD_DELAY];
+//     bms->conf.dis_sc_limit = SCD_threshold_setting[protect1.SCD_THRESH] /
+//     bms->conf.shunt_res_mOhm; bms->conf.dis_sc_delay_us =
+//     SCD_delay_setting[protect1.SCD_DELAY];
 
 //     return 0;
 // }
@@ -256,7 +272,8 @@ void bms_shutdown(Bms *bms)
 
 //     protect2.OCD_THRESH = 0;
 //     for (int i = ARRAY_SIZE(OCD_threshold_setting) - 1; i > 0; i--) {
-//         if (bms->conf.dis_oc_limit * bms->conf.shunt_res_mOhm >= OCD_threshold_setting[i]) {
+//         if (bms->conf.dis_oc_limit * bms->conf.shunt_res_mOhm >=
+//         OCD_threshold_setting[i]) {
 //             protect2.OCD_THRESH = i;
 //             break;
 //         }
@@ -273,8 +290,9 @@ void bms_shutdown(Bms *bms)
 //     bq769x0_write_byte(BQ769X0_PROTECT2, protect2.byte);
 
 //     // store actually configured values
-//     bms->conf.dis_oc_limit = OCD_threshold_setting[protect2.OCD_THRESH] / bms->conf.shunt_res_mOhm;
-//     bms->conf.dis_oc_delay_ms = OCD_delay_setting[protect2.OCD_DELAY];
+//     bms->conf.dis_oc_limit = OCD_threshold_setting[protect2.OCD_THRESH] /
+//     bms->conf.shunt_res_mOhm; bms->conf.dis_oc_delay_ms =
+//     OCD_delay_setting[protect2.OCD_DELAY];
 
 //     return 0;
 // }
@@ -287,7 +305,8 @@ void bms_shutdown(Bms *bms)
 //     protect3.byte = bq769x0_read_byte(BQ769X0_PROTECT3);
 
 //     uv_trip =
-//         ((((long)(bms->conf.cell_uv_limit * 1000) - adc_offset) * 1000 / adc_gain) >> 4) & 0x00FF;
+//         ((((long)(bms->conf.cell_uv_limit * 1000) - adc_offset) * 1000 /
+//         adc_gain) >> 4) & 0x00FF;
 //     uv_trip += 1; // always round up for lower cell voltage
 //     bq769x0_write_byte(BQ769X0_UV_TRIP, uv_trip);
 
@@ -302,8 +321,9 @@ void bms_shutdown(Bms *bms)
 //     bq769x0_write_byte(BQ769X0_PROTECT3, protect3.byte);
 
 //     // store actually configured values
-//     bms->conf.cell_uv_limit = ((long)1 << 12 | uv_trip << 4) * adc_gain / 1000 + adc_offset;
-//     bms->conf.cell_uv_delay_ms = UV_delay_setting[protect3.UV_DELAY];
+//     bms->conf.cell_uv_limit = ((long)1 << 12 | uv_trip << 4) * adc_gain /
+//     1000 + adc_offset; bms->conf.cell_uv_delay_ms =
+//     UV_delay_setting[protect3.UV_DELAY];
 
 //     return 0;
 // }
@@ -316,7 +336,8 @@ void bms_shutdown(Bms *bms)
 //     protect3.byte = bq769x0_read_byte(BQ769X0_PROTECT3);
 
 //     ov_trip =
-//         ((((long)(bms->conf.cell_ov_limit * 1000) - adc_offset) * 1000 / adc_gain) >> 4) & 0x00FF;
+//         ((((long)(bms->conf.cell_ov_limit * 1000) - adc_offset) * 1000 /
+//         adc_gain) >> 4) & 0x00FF;
 //     bq769x0_write_byte(BQ769X0_OV_TRIP, ov_trip);
 
 //     protect3.OV_DELAY = 0;
@@ -331,15 +352,17 @@ void bms_shutdown(Bms *bms)
 
 //     // store actually configured values
 
-//     bms->conf.cell_ov_limit = ((long)1 << 13 | ov_trip << 4) * adc_gain / 1000 + adc_offset;
-//     bms->conf.cell_ov_delay_ms = OV_delay_setting[protect3.OV_DELAY];
+//     bms->conf.cell_ov_limit = ((long)1 << 13 | ov_trip << 4) * adc_gain /
+//     1000 + adc_offset; bms->conf.cell_ov_delay_ms =
+//     OV_delay_setting[protect3.OV_DELAY];
 
 //     return 0;
 // }
 
 // int bms_apply_temp_limits(Bms *bms)
 // {
-//     // bq769x0 don't support temperature limits --> has to be solved in software
+//     // bq769x0 don't support temperature limits --> has to be solved in
+//     software
 
 //     return 0;
 // }
@@ -348,122 +371,124 @@ void bms_shutdown(Bms *bms)
 // - According to bq769x0 datasheet, only 10k thermistors should be used
 // - 25°C reference temperature for Beta equation assumed
 float thermistor_temp(float resistance, int beta) {
-    return 1.0 / (1.0 / (273.15 + 25) + log(resistance / 47000.0) / beta); // K
+  return 1.0 / (1.0 / (273.15 + 25) + log(resistance / 47000.0) / beta); // K
 }
 
-void bms_read_temperatures(Bms *bms)
-{
-    float tmp = 0;
-    int adc_raw = 0;
-    float vtsx = 0;
-    float rts = 0;
+void bms_read_temperatures(Bms *bms) {
+  float tmp = 0;
+  int adc_raw = 0;
+  float vtsx = 0;
+  float rts = 0;
 
-    // calculate R_thermistor according to bq769x0 datasheet
-    adc_raw = (bq769x0_read_byte(BQ769X0_TS1_HI_BYTE) & 0b00111111) << 8
-              | bq769x0_read_byte(BQ769X0_TS1_LO_BYTE);
+  // calculate R_thermistor according to bq769x0 datasheet
+  adc_raw = (bq769x0_read_byte(BQ769X0_TS1_HI_BYTE) & 0b00111111) << 8 |
+            bq769x0_read_byte(BQ769X0_TS1_LO_BYTE);
+  vtsx = adc_raw * 382 * 1e-3F;           // mV
+  rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
+
+  tmp = thermistor_temp(rts, bms->conf.thermistor_beta);
+  bms->status.bat_temps[0] = tmp - 273.15;
+  bms->status.bat_temp_min = bms->status.bat_temps[0];
+  bms->status.bat_temp_max = bms->status.bat_temps[0];
+  int num_temps = 1;
+  float sum_temps = bms->status.bat_temps[0];
+
+  if (BOARD_NUM_THERMISTORS_MAX >= 2) { // bq76930 or bq76940
+    adc_raw = (bq769x0_read_byte(BQ769X0_TS2_HI_BYTE) & 0b00111111) << 8 |
+              bq769x0_read_byte(BQ769X0_TS2_LO_BYTE);
     vtsx = adc_raw * 382 * 1e-3F;           // mV
     rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
-
-    
     tmp = thermistor_temp(rts, bms->conf.thermistor_beta);
-    bms->status.bat_temps[0] = tmp - 273.15;
-    bms->status.bat_temp_min = bms->status.bat_temps[0];
-    bms->status.bat_temp_max = bms->status.bat_temps[0];
-    int num_temps = 1;
-    float sum_temps = bms->status.bat_temps[0];
+    bms->status.bat_temps[1] = tmp - 273.15;
 
-    if (BOARD_NUM_THERMISTORS_MAX >= 2) { // bq76930 or bq76940
-        adc_raw = (bq769x0_read_byte(BQ769X0_TS2_HI_BYTE) & 0b00111111) << 8
-                  | bq769x0_read_byte(BQ769X0_TS2_LO_BYTE);
-        vtsx = adc_raw * 382 * 1e-3F;           // mV
-        rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
-        tmp = thermistor_temp(rts, bms->conf.thermistor_beta);
-        bms->status.bat_temps[1] = tmp - 273.15;
-
-        if (bms->status.bat_temps[1] < bms->status.bat_temp_min) {
-            bms->status.bat_temp_min = bms->status.bat_temps[1];
-        }
-        if (bms->status.bat_temps[1] > bms->status.bat_temp_max) {
-            bms->status.bat_temp_max = bms->status.bat_temps[1];
-        }
-        num_temps++;
-        sum_temps += bms->status.bat_temps[1];
+    if (bms->status.bat_temps[1] < bms->status.bat_temp_min) {
+      bms->status.bat_temp_min = bms->status.bat_temps[1];
     }
-
-    if (BOARD_NUM_THERMISTORS_MAX == 3) { // bq76940
-        adc_raw = (bq769x0_read_byte(BQ769X0_TS3_HI_BYTE) & 0b00111111) << 8
-                  | bq769x0_read_byte(BQ769X0_TS3_LO_BYTE);
-        vtsx = adc_raw * 382 * 1e-3F;           // mV
-        rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
-        tmp = thermistor_temp(rts, bms->conf.thermistor_beta);
-        bms->status.bat_temps[2] = tmp - 273.15;
-
-        if (bms->status.bat_temps[2] < bms->status.bat_temp_min) {
-            bms->status.bat_temp_min = bms->status.bat_temps[2];
-        }
-        if (bms->status.bat_temps[2] > bms->status.bat_temp_max) {
-            bms->status.bat_temp_max = bms->status.bat_temps[2];
-        }
-        num_temps++;
-        sum_temps += bms->status.bat_temps[2];
+    if (bms->status.bat_temps[1] > bms->status.bat_temp_max) {
+      bms->status.bat_temp_max = bms->status.bat_temps[1];
     }
-    bms->status.bat_temp_avg = sum_temps / num_temps;
+    num_temps++;
+    sum_temps += bms->status.bat_temps[1];
+  }
+
+  if (BOARD_NUM_THERMISTORS_MAX == 3) { // bq76940
+    adc_raw = (bq769x0_read_byte(BQ769X0_TS3_HI_BYTE) & 0b00111111) << 8 |
+              bq769x0_read_byte(BQ769X0_TS3_LO_BYTE);
+    vtsx = adc_raw * 382 * 1e-3F;           // mV
+    rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
+    tmp = thermistor_temp(rts, bms->conf.thermistor_beta);
+    bms->status.bat_temps[2] = tmp - 273.15;
+
+    if (bms->status.bat_temps[2] < bms->status.bat_temp_min) {
+      bms->status.bat_temp_min = bms->status.bat_temps[2];
+    }
+    if (bms->status.bat_temps[2] > bms->status.bat_temp_max) {
+      bms->status.bat_temp_max = bms->status.bat_temps[2];
+    }
+    num_temps++;
+    sum_temps += bms->status.bat_temps[2];
+  }
+  bms->status.bat_temp_avg = sum_temps / num_temps;
 }
 
-void bms_read_current(Bms *bms)
-{
-    SYS_STAT_Type sys_stat;
-    sys_stat.byte = bq769x0_read_byte(BQ769X0_SYS_STAT);
+void bms_read_current(Bms *bms) {
+  SYS_STAT_Type sys_stat;
+  sys_stat.byte = bq769x0_read_byte(BQ769X0_SYS_STAT);
 
-    // check if new current reading available
-    if (sys_stat.CC_READY == 1) {
-        int adc_raw = bq769x0_read_word(BQ769X0_CC_HI_BYTE);
-        if (adc_raw < 0) {
-            LOG_DEBUG("Error reading current measurement %d", adc_raw);
-            return;
-        }
-
-        int32_t pack_current_mA = (int16_t)adc_raw * 8.44 * 1e-3F / bms->conf.shunt_res_mOhm;
-
-        bms->status.pack_current = pack_current_mA * 1e-3F;
-
-        bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_CC_READY); // clear CC ready flag
+  // check if new current reading available
+  if (sys_stat.CC_READY == 1) {
+    int adc_raw = bq769x0_read_word(BQ769X0_CC_HI_BYTE);
+    if (adc_raw < 0) {
+      LogDebug("Error reading current measurement %d", adc_raw);
+      return;
     }
+
+    int32_t pack_current_mA =
+        (int16_t)adc_raw * 8.44 * 1e-3F / bms->conf.shunt_res_mOhm;
+
+    bms->status.pack_current = pack_current_mA * 1e-3F;
+
+    bq769x0_write_byte(BQ769X0_SYS_STAT,
+                       BQ769X0_SYS_STAT_CC_READY); // clear CC ready flag
+  }
 }
 
-void bms_read_voltages(Bms *bms)
-{
-    int adc_raw = 0;
-    int conn_cells = 0;
-    float sum_voltages = 0;
-    float v_max = 0, v_min = 10;
+void bms_read_voltages(Bms *bms) {
+  int adc_raw = 0;
+  int conn_cells = 0;
+  float sum_voltages = 0;
+  float v_max = 0, v_min = 10;
 
-    for (int i = 0; i < BOARD_NUM_CELLS_MAX; i++) {
-        adc_raw = (bq769x0_read_byte(BQ769X0_VC1_HI_BYTE + i * 2) & 0b00111111) << 8
-                  | bq769x0_read_byte(BQ769X0_VC1_HI_BYTE + i * 2 + 1);
-        
-        bms->status.cell_voltages[i] = (adc_raw * adc_gain * 1e-3F + adc_offset) * 1e-3F;
+  for (int i = 0; i < BOARD_NUM_CELLS_MAX; i++) {
+    adc_raw = (bq769x0_read_byte(BQ769X0_VC1_HI_BYTE + i * 2) & 0b00111111)
+                  << 8 |
+              bq769x0_read_byte(BQ769X0_VC1_HI_BYTE + i * 2 + 1);
 
-        if (bms->status.cell_voltages[i] > 0.5F) {
-            conn_cells++;
-            sum_voltages += bms->status.cell_voltages[i];
-        }
-        if (bms->status.cell_voltages[i] > v_max) {
-            v_max = bms->status.cell_voltages[i];
-        }
-        if (bms->status.cell_voltages[i] < v_min && bms->status.cell_voltages[i] > 0.5F) {
-            v_min = bms->status.cell_voltages[i];
-        }
+    bms->status.cell_voltages[i] =
+        (adc_raw * adc_gain * 1e-3F + adc_offset) * 1e-3F;
+
+    if (bms->status.cell_voltages[i] > 0.5F) {
+      conn_cells++;
+      sum_voltages += bms->status.cell_voltages[i];
     }
-    bms->status.connected_cells = conn_cells;
-    bms->status.cell_voltage_avg = sum_voltages / conn_cells;
-    bms->status.cell_voltage_min = v_min;
-    bms->status.cell_voltage_max = v_max;
+    if (bms->status.cell_voltages[i] > v_max) {
+      v_max = bms->status.cell_voltages[i];
+    }
+    if (bms->status.cell_voltages[i] < v_min &&
+        bms->status.cell_voltages[i] > 0.5F) {
+      v_min = bms->status.cell_voltages[i];
+    }
+  }
+  bms->status.connected_cells = conn_cells;
+  bms->status.cell_voltage_avg = sum_voltages / conn_cells;
+  bms->status.cell_voltage_min = v_min;
+  bms->status.cell_voltage_max = v_max;
 
-    // read battery pack voltage
-    adc_raw = bq769x0_read_word(BQ769X0_BAT_HI_BYTE);
-    bms->status.pack_voltage =
-        (4.0F * adc_gain * adc_raw * 1e-3F + bms->status.connected_cells * adc_offset) * 1e-3F;
+  // read battery pack voltage
+  adc_raw = bq769x0_read_word(BQ769X0_BAT_HI_BYTE);
+  bms->status.pack_voltage = (4.0F * adc_gain * adc_raw * 1e-3F +
+                              bms->status.connected_cells * adc_offset) *
+                             1e-3F;
 }
 
 // void bms_update_error_flags(Bms *bms)
@@ -532,7 +557,8 @@ void bms_read_voltages(Bms *bms)
 //             sec_since_error = 0;
 //         }
 
-//         unsigned int sec_since_interrupt = uptime() - bq769x0_alert_timestamp();
+//         unsigned int sec_since_interrupt = uptime() -
+//         bq769x0_alert_timestamp();
 
 //         if (abs((long)(sec_since_interrupt - sec_since_error)) > 2) {
 //             sec_since_error = sec_since_interrupt;
@@ -541,19 +567,19 @@ void bms_read_voltages(Bms *bms)
 //         // called only once per second
 //         if (sec_since_interrupt >= sec_since_error) {
 //             if (sys_stat.DEVICE_XREADY) {
-//                 // datasheet recommendation: try to clear after waiting a few seconds
-//                 if (sec_since_error % 3 == 0) {
+//                 // datasheet recommendation: try to clear after waiting a few
+//                 seconds if (sec_since_error % 3 == 0) {
 //                     LOG_DEBUG("Attempting to clear XR error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_DEVICE_XREADY);
-//                     bms_chg_switch(bms, true);
-//                     bms_dis_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_DEVICE_XREADY); bms_chg_switch(bms,
+//                     true); bms_dis_switch(bms, true);
 //                 }
 //             }
 //             if (sys_stat.OVRD_ALERT) {
 //                 if (sec_since_error % 10 == 0) {
 //                     LOG_DEBUG("Attempting to clear Alert error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_OVRD_ALERT);
-//                     bms_chg_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_OVRD_ALERT); bms_chg_switch(bms, true);
 //                     bms_dis_switch(bms, true);
 //                 }
 //             }
@@ -561,30 +587,30 @@ void bms_read_voltages(Bms *bms)
 //                 bms_read_voltages(bms);
 //                 if (bms->status.cell_voltage_min > bms->conf.cell_uv_reset) {
 //                     LOG_DEBUG("Attempting to clear UV error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_UV);
-//                     bms_dis_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_UV); bms_dis_switch(bms, true);
 //                 }
 //             }
 //             if (sys_stat.OV) {
 //                 bms_read_voltages(bms);
 //                 if (bms->status.cell_voltage_max < bms->conf.cell_ov_reset) {
 //                     LOG_DEBUG("Attempting to clear OV error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_OV);
-//                     bms_chg_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_OV); bms_chg_switch(bms, true);
 //                 }
 //             }
 //             if (sys_stat.SCD) {
 //                 if (sec_since_error % 60 == 0) {
 //                     LOG_DEBUG("Attempting to clear SCD error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_SCD);
-//                     bms_dis_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_SCD); bms_dis_switch(bms, true);
 //                 }
 //             }
 //             if (sys_stat.OCD) {
 //                 if (sec_since_error % 60 == 0) {
 //                     LOG_DEBUG("Attempting to clear OCD error");
-//                     bq769x0_write_byte(BQ769X0_SYS_STAT, BQ769X0_SYS_STAT_OCD);
-//                     bms_dis_switch(bms, true);
+//                     bq769x0_write_byte(BQ769X0_SYS_STAT,
+//                     BQ769X0_SYS_STAT_OCD); bms_dis_switch(bms, true);
 //                 }
 //             }
 //             sec_since_error++;
@@ -603,21 +629,29 @@ void bms_read_voltages(Bms *bms)
 
 // void bms_print_registers()
 // {
-//     printf("0x00 SYS_STAT:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_STAT)));
-//     printf("0x01 CELLBAL1:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CELLBAL1)));
-//     printf("0x04 SYS_CTRL1: %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_CTRL1)));
-//     printf("0x05 SYS_CTRL2: %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_CTRL2)));
-//     printf("0x06 PROTECT1:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT1)));
-//     printf("0x07 PROTECT2:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT2)));
-//     printf("0x08 PROTECT3:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT3)));
-//     printf("0x09 OV_TRIP:   %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_OV_TRIP)));
-//     printf("0x0A UV_TRIP:   %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_UV_TRIP)));
-//     printf("0x0B CC_CFG:    %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CC_CFG)));
-//     printf("0x32 CC_HI:     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CC_HI_BYTE)));
-//     printf("0x33 CC_LO:     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CC_LO_BYTE)));
+//     printf("0x00 SYS_STAT:  %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_STAT))); printf("0x01 CELLBAL1:
+//     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CELLBAL1))); printf("0x04
+//     SYS_CTRL1: %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_CTRL1)));
+//     printf("0x05 SYS_CTRL2: %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_SYS_CTRL2))); printf("0x06
+//     PROTECT1:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT1)));
+//     printf("0x07 PROTECT2:  %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT2))); printf("0x08 PROTECT3:
+//     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_PROTECT3))); printf("0x09
+//     OV_TRIP:   %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_OV_TRIP)));
+//     printf("0x0A UV_TRIP:   %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_UV_TRIP))); printf("0x0B CC_CFG:
+//     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CC_CFG))); printf("0x32
+//     CC_HI:     %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_CC_HI_BYTE)));
+//     printf("0x33 CC_LO:     %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_CC_LO_BYTE)));
 //     /*
-//     printf("0x50 BQ769X0_ADCGAIN1:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_ADCGAIN1)));
-//     printf("0x51 BQ769X0_ADCOFFSET: %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_ADCOFFSET)));
-//     printf("0x59 BQ769X0_ADCGAIN2:  %s\n", byte2bitstr(bq769x0_read_byte(BQ769X0_ADCGAIN2)));
+//     printf("0x50 BQ769X0_ADCGAIN1:  %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_ADCGAIN1))); printf("0x51
+//     BQ769X0_ADCOFFSET: %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_ADCOFFSET))); printf("0x59
+//     BQ769X0_ADCGAIN2:  %s\n",
+//     byte2bitstr(bq769x0_read_byte(BQ769X0_ADCGAIN2)));
 //     */
 // }

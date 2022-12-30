@@ -1,11 +1,5 @@
-/*
- * Copyright (c) The Libre Solar Project Contributors
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-#ifndef BMS_H
-#define BMS_H
+#ifndef _BQ76940_H_
+#define _BQ76940_H_
 
 /** @file
  *
@@ -17,8 +11,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #define BOARD_NUM_CELLS_MAX 15

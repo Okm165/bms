@@ -1,11 +1,5 @@
-/*
- * Copyright (c) The Libre Solar Project Contributors
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-#ifndef BQ769X0_INTERFACE_H
-#define BQ769X0_INTERFACE_H
+#ifndef _BQ769X0_INTERFACE_H_
+#define _BQ769X0_INTERFACE_H_
 
 /** @file
  *
@@ -69,15 +63,3 @@ time_t bq769x0_alert_timestamp();
 #endif
 
 #endif // BQ769X0_INTERFACE_H
-
-
-/*
-
-uint8_t a = 10;
-    HAL_StatusTypeDef err;
-    err = HAL_I2C_Master_Receive(&hi2c2, 0x10, &a, 1, 1000);
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    printf("err %d\r\n", err);
-    printf("Hello %s\r\n", "world");
-
-*/
