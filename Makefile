@@ -43,7 +43,8 @@ C_INCLUDES_DIRS =  \
 	Middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 	Middlewares/FreeRTOS_Plus_TCP/source/include \
 	Middlewares/FreeRTOS_Plus_TCP/source/portable/Compiler/GCC \
-	Middlewares/enc28j60/include
+	Middlewares/bq76940/include \
+	Middlewares/enc28j60/include \
 
 C_INCLUDES = $(addprefix -I, $(C_INCLUDES_DIRS))
 
