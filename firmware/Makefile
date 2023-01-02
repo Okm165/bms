@@ -34,7 +34,7 @@ C_INCLUDES_DIRS =  \
 	Core/Inc \
 	Core/Inc/logging \
 	Core/Inc/tcp_server \
-	Core/Inc/bsm \
+	Core/Inc/bms \
 	Drivers/STM32L4xx_HAL_Driver/Inc \
 	Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
 	Drivers/CMSIS/Include \
@@ -46,6 +46,7 @@ C_INCLUDES_DIRS =  \
 	Middlewares/FreeRTOS_Plus_TCP/source/portable/Compiler/GCC \
 	Middlewares/bq76940/include \
 	Middlewares/enc28j60/include \
+	Middlewares/matrixlib/include \
 
 C_INCLUDES = $(addprefix -I, $(C_INCLUDES_DIRS))
 
