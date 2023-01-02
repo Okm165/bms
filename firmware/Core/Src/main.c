@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bq76940.h"
 #include "cmsis_os.h"
 #include "echoserver.h"
 #include "enc28j60.h"
@@ -50,12 +51,13 @@ SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart2;
 
-osThreadId initTaskHandle;
-osThreadId poolingTaskHandle;
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
+// TCP Stack - IP configuration
+uint8_t ucMACAddress[6] = {0x00, 0x11, 0x00, 0xdd, 0xee, 0xff};
+uint8_t ucIPAddress[4] = {172, 16, 15, 133};
+uint8_t ucNetMask[4] = {255, 255, 255, 0};
+uint8_t ucGatewayAddress[4] = {172, 16, 15, 1};
+// The following is the address of an OpenDNS server.
+uint8_t ucDNSServerAddress[4] = {208, 67, 222, 222};
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -64,20 +66,39 @@ static void MX_I2C1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
 /* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-// TCP Stack - IP configuration
-uint8_t ucMACAddress[6] = {0x00, 0x11, 0x00, 0xdd, 0xee, 0xff};
-const uint8_t ucIPAddress[4] = {172, 16, 15, 133};
-const uint8_t ucNetMask[4] = {255, 255, 255, 0};
-const uint8_t ucGatewayAddress[4] = {172, 16, 15, 1};
-// The following is the address of an OpenDNS server.
-const uint8_t ucDNSServerAddress[4] = {208, 67, 222, 222};
-/* USER CODE END 0 */
+
+void bq_test() {
+  LogDebug("bq_test started\n");
+
+  BQConfig bq_conf = {.scp_threshold = SCD_T_44mV,
+                      .scp_delay = SCD_D_100us,
+                      .ocp_threshold = OCD_T_17mV,
+                      .ocp_delay = OCD_D_8ms,
+                      .uv_threshold = 1.5,
+                      .uv_delay = UV_D_1s,
+                      .ov_threshold = 4.7,
+                      .ov_delay = OV_D_1s,
+                      .temp_source = TS_SRC_External};
+
+  while (bq769x0_init(&bq_conf)) {
+  }
+  LogDebug("bq769x0_init success\n");
+
+  LogDebug("cell3: %f\n", bq769x0_read_cell_voltage(BQ_CELL_3));
+  LogDebug("pack: %f\n", bq769x0_read_pack_voltage(13));
+
+  while (true) {
+    SYS_STAT_Type data = bq769x0_system_faults();
+    LogDebug("cell1: %f\n", bq769x0_read_cell_voltage(BQ_CELL_1));
+    LogDebug("faults: %d\n", data.byte);
+    bq769x0_system_clear_faults(data);
+    vTaskDelay(100);
+  }
+
+  LogDebug("bq_test stop\n");
+  vTaskDelete(NULL);
+}
 
 /**
  * @brief  The application entry point.
@@ -96,8 +117,11 @@ int main(void) {
 
   LogDebug("CPU, GPIO initialized\n");
 
-  FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
-                  ucMACAddress);
+  // FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress,
+  // ucDNSServerAddress,
+  //                 ucMACAddress);
+
+  xTaskCreate(bq_test, "bq_test", 1024, NULL, osPriorityNormal, NULL);
 
   LogDebug("starting scheduler\n");
   vTaskStartScheduler();

@@ -39,33 +39,19 @@ extern "C" {
 #include "stdio.h"
 #include "string.h"
 
-/* USER CODE END Includes */
-
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
 extern I2C_HandleTypeDef hi2c1;
-
 extern SPI_HandleTypeDef hspi2;
-
 extern UART_HandleTypeDef huart2;
-/* USER CODE END ET */
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+// TCP Stack - IP configuration
 extern uint8_t ucMACAddress[6];
-/* USER CODE END EC */
-
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
-
-/* USER CODE END EM */
+extern uint8_t ucIPAddress[4];
+extern uint8_t ucNetMask[4];
+extern uint8_t ucGatewayAddress[4];
+extern uint8_t ucDNSServerAddress[4];
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
