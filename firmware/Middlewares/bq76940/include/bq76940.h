@@ -4,427 +4,306 @@
 /** @file
  *
  * @brief
- * Battery Management System (BMS) module for different analog frontends
+ * Battery Management System (BQ) module for different analog frontends
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "registers.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #define BOARD_NUM_CELLS_MAX 15
-#define BOARD_NUM_THERMISTORS_MAX 3
-
-#define BOARD_MAX_CURRENT 10
-#define BOARD_SHUNT_RESISTOR 10
 
 /**
- * Possible BMS states
+ * Battery cell ids
  */
-enum BmsState {
-  BMS_STATE_OFF,      ///< Off state (charging and discharging disabled)
-  BMS_STATE_CHG,      ///< Charging state (discharging disabled)
-  BMS_STATE_DIS,      ///< Discharging state (charging disabled)
-  BMS_STATE_NORMAL,   ///< Normal operating mode (both charging and discharging
-                      ///< enabled)
-  BMS_STATE_SHUTDOWN, ///< BMS starting shutdown sequence
+enum CellId {
+  BQ_CELL_1 = BQ769X0_VC1_HI_BYTE,
+  BQ_CELL_2 = BQ769X0_VC2_HI_BYTE,
+  BQ_CELL_3 = BQ769X0_VC3_HI_BYTE,
+  BQ_CELL_4 = BQ769X0_VC4_HI_BYTE,
+  BQ_CELL_5 = BQ769X0_VC5_HI_BYTE,
+  BQ_CELL_6 = BQ769X0_VC6_HI_BYTE,
+  BQ_CELL_7 = BQ769X0_VC7_HI_BYTE,
+  BQ_CELL_8 = BQ769X0_VC8_HI_BYTE,
+  BQ_CELL_9 = BQ769X0_VC9_HI_BYTE,
+  BQ_CELL_10 = BQ769X0_VC10_HI_BYTE,
+  BQ_CELL_11 = BQ769X0_VC11_HI_BYTE,
+  BQ_CELL_12 = BQ769X0_VC12_HI_BYTE,
+  BQ_CELL_13 = BQ769X0_VC13_HI_BYTE,
+  BQ_CELL_14 = BQ769X0_VC14_HI_BYTE,
+  BQ_CELL_15 = BQ769X0_VC15_HI_BYTE
 };
 
 /**
- * Battery cell types
+ * TSx_HI and TSx_LO temperature source
  */
-enum CellType {
-  CELL_TYPE_CUSTOM = 0, ///< Custom settings
-  CELL_TYPE_LFP,        ///< LiFePO4 Li-ion cells (3.3 V nominal)
-  CELL_TYPE_NMC,        ///< NMC/Graphite Li-ion cells (3.7 V nominal)
-  CELL_TYPE_NMC_HV,     ///< NMC/Graphite High Voltage Li-ion cells (3.7 V
-                        ///< nominal, 4.35 V max)
-  CELL_TYPE_LTO         ///< NMC/Titanate (2.4 V nominal)
+enum TS_SRC {
+  TS_SRC_Internal = 0x0,
+  TS_SRC_External = 0x1,
 };
 
 /**
- * BMS configuration values, stored in RAM. The configuration is not
- * automatically applied after values are changed!
+ * Internal Termistors ids
  */
-typedef struct {
-  /// Effective resistance of the current measurement shunt(s) on the PCB
-  /// (milli-Ohms)
-  float shunt_res_mOhm;
-
-  /// Beta value of the used thermistor. Typical value for Semitec 103AT-5
-  /// thermistor: 3435
-  uint16_t thermistor_beta;
-
-  /// \brief Pointer to an array containing the Open Circuit Voltage of the cell
-  /// vs. SOC. SOC must be equally spaced in descending order (100%, 95%, ...,
-  /// 5%, 0%)
-  float *ocv;
-  size_t num_ocv_points; ///< Number of point in OCV array
-
-  float nominal_capacity_Ah; ///< Nominal capacity of battery pack (Ah)
-
-  // Current limits
-  float dis_sc_limit;       ///< Discharge short circuit limit (A)
-  uint32_t dis_sc_delay_us; ///< Discharge short circuit delay (us)
-  float dis_oc_limit;       ///< Discharge over-current limit (A)
-  uint32_t dis_oc_delay_ms; ///< Discharge over-current delay (ms)
-  float chg_oc_limit;       ///< Charge over-current limit (A)
-  uint32_t chg_oc_delay_ms; ///< Charge over-current delay (ms)
-
-  // Cell voltage limits
-  float cell_chg_voltage;    ///< Cell target charge voltage (V)
-  float cell_dis_voltage;    ///< Cell discharge voltage limit (V)
-  float cell_ov_limit;       ///< Cell over-voltage limit (V)
-  float cell_ov_reset;       ///< Cell over-voltage error reset threshold (V)
-  uint32_t cell_ov_delay_ms; ///< Cell over-voltage delay (ms)
-  float cell_uv_limit;       ///< Cell under-voltage limit (V)
-  float cell_uv_reset;       ///< Cell under-voltage error reset threshold (V)
-  uint32_t cell_uv_delay_ms; ///< Cell under-voltage delay (ms)
-
-  // Temperature limits (°C)
-  float dis_ot_limit; ///< Discharge over-temperature (DOT) limit (°C)
-  float dis_ut_limit; ///< Discharge under-temperature (DUT) limit (°C)
-  float chg_ot_limit; ///< Charge over-temperature (COT) limit (°C)
-  float chg_ut_limit; ///< Charge under-temperature (CUT) limit (°C)
-  float t_limit_hyst; ///< Temperature limit hysteresis (°C)
-
-  // Balancing settings
-  float bal_cell_voltage_diff; ///< Balancing cell voltage target difference (V)
-  float bal_cell_voltage_min;  ///< Minimum cell voltage to start balancing (V)
-  float bal_idle_current;      ///< Current threshold to be considered idle (A)
-  uint16_t bal_idle_delay;     ///< Minimum idle duration before balancing (s)
-} BmsConfig;
-
-/**
- * Current BMS status including measurements and error flags
- */
-typedef struct {
-  uint16_t state;  ///< Current state of the battery
-  bool chg_enable; ///< Manual enable/disable setting for charging
-  bool dis_enable; ///< Manual enable/disable setting for discharging
-
-  uint16_t connected_cells; ///< \brief Actual number of cells connected (might
-                            ///< be less than BOARD_NUM_CELLS_MAX)
-
-  float cell_voltages[BOARD_NUM_CELLS_MAX]; ///< Single cell voltages (V)
-  float cell_voltage_max;                   ///< Maximum cell voltage (V)
-  float cell_voltage_min;                   ///< Minimum cell voltage (V)
-  float cell_voltage_avg;                   ///< Average cell voltage (V)
-  float pack_voltage;                       ///< Battery pack voltage (V)
-
-  float pack_current; ///< \brief Battery pack current, charging direction
-                      ///< has positive sign (A)
-
-  float bat_temps[BOARD_NUM_THERMISTORS_MAX]; ///< Battery temperatures (°C)
-  float bat_temp_max; ///< Maximum battery temperature (°C)
-  float bat_temp_min; ///< Minimum battery temperature (°C)
-  float bat_temp_avg; ///< Average battery temperature (°C)
-  float mosfet_temp;  ///< MOSFET temperature (°C)
-  float ic_temp;      ///< Internal BMS IC temperature (°C)
-  float mcu_temp;     ///< MCU temperature (°C)
-
-  bool full;  ///< CV charging to cell_chg_voltage finished
-  bool empty; ///< Battery is discharged below cell_dis_voltage
-
-  float soc; ///< Calculated State of Charge (%)
-
-  uint32_t balancing_status; ///< holds on/off status of balancing switches
-  time_t no_idle_timestamp;  ///< Stores last time of current > idle threshold
-
-  uint32_t error_flags; ///< Bit array for different BmsErrorFlag errors
-} BmsStatus;
-
-/**
- * BMS error flags
- */
-enum BmsErrorFlag {
-  BMS_ERR_CELL_UNDERVOLTAGE = 0, ///< Cell undervoltage flag
-  BMS_ERR_CELL_OVERVOLTAGE = 1,  ///< Cell undervoltage flag
-  BMS_ERR_SHORT_CIRCUIT = 2,     ///< Pack short circuit (discharge direction)
-  BMS_ERR_DIS_OVERCURRENT = 3,   ///< Pack overcurrent (discharge direction)
-  BMS_ERR_CHG_OVERCURRENT = 4,   ///< Pack overcurrent (charge direction)
-  BMS_ERR_OPEN_WIRE = 5,         ///< Cell open wire
-  BMS_ERR_DIS_UNDERTEMP = 6,     ///< Temperature below discharge minimum limit
-  BMS_ERR_DIS_OVERTEMP = 7,      ///< Temperature above discharge maximum limit
-  BMS_ERR_CHG_UNDERTEMP = 8,     ///< Temperature below charge maximum limit
-  BMS_ERR_CHG_OVERTEMP = 9,      ///< Temperature above charge maximum limit
-  BMS_ERR_INT_OVERTEMP = 10, ///< Internal temperature above limit (e.g. BMS IC)
-  BMS_ERR_CELL_FAILURE = 11, ///< Cell failure (too high voltage difference)
-  BMS_ERR_DIS_OFF = 12, ///< Discharge FET is off even though it should be on
-  BMS_ERR_CHG_OFF = 13, ///< Charge FET is off even though it should be on
-  BMS_ERR_FET_OVERTEMP = 14, ///< MOSFET temperature above limit
+enum TS_INT_Id {
+  BQ_TS_INT_1 = BQ769X0_TS2_HI_BYTE,
+  BQ_TS_INT_2 = BQ769X0_TS3_HI_BYTE,
 };
 
+/**
+ * External Termistors ids
+ */
+enum TS_EXT_Id {
+  BQ_TS_EXT_1 = BQ769X0_TS1_HI_BYTE,
+  BQ_TS_EXT_2 = BQ769X0_TS2_HI_BYTE,
+  BQ_TS_EXT_3 = BQ769X0_TS3_HI_BYTE,
+};
+
+/**
+ * Short circuit in discharge threshold setting
+ */
+enum SCD_T {
+  SCD_T_44mV = 0x0,
+  SCD_T_67mV = 0x1,
+  SCD_T_89mV = 0x2,
+  SCD_T_111mV = 0x3,
+  SCD_T_133mV = 0x4,
+  SCD_T_155mV = 0x5,
+  SCD_T_178mV = 0x6,
+  SCD_T_200mV = 0x7
+};
+
+/**
+ * Short circuit in discharge delay setting
+ */
+enum SCD_D {
+  SCD_D_70us = 0x0,
+  SCD_D_100us = 0x1,
+  SCD_D_200us = 0x2,
+  SCD_D_400us = 0x3
+};
+
+/**
+ * Overcurrent in discharge threshold setting
+ */
+enum OCD_T {
+  OCD_T_17mV = 0x0,
+  OCD_T_22mV = 0x1,
+  OCD_T_28mV = 0x2,
+  OCD_T_33mV = 0x3,
+  OCD_T_39mV = 0x4,
+  OCD_T_44mV = 0x5,
+  OCD_T_50mV = 0x6,
+  OCD_T_56mV = 0x7,
+  OCD_T_61mV = 0x8,
+  OCD_T_67mV = 0x9,
+  OCD_T_72mV = 0xA,
+  OCD_T_78mV = 0xB,
+  OCD_T_83mV = 0xC,
+  OCD_T_89mV = 0xD,
+  OCD_T_94mV = 0xE,
+  OCD_T_100mV = 0xF,
+};
+
+/**
+ * Overcurrent in discharge delay setting
+ */
+enum OCD_D {
+  OCD_D_8ms = 0x0,
+  OCD_D_20ms = 0x1,
+  OCD_D_40ms = 0x2,
+  OCD_D_80ms = 0x3,
+  OCD_D_160ms = 0x4,
+  OCD_D_320ms = 0x5,
+  OCD_D_640ms = 0x6,
+  OCD_D_1280ms = 0x7,
+};
+
+/**
+ * Undervoltage delay setting
+ */
+enum UV_D {
+  UV_D_1s = 0x0,
+  UV_D_4s = 0x1,
+  UV_D_8s = 0x2,
+  UV_D_16s = 0x3,
+};
+
+/**
+ * Overvoltage delay setting
+ */
+enum OV_D {
+  OV_D_1s = 0x0,
+  OV_D_2s = 0x1,
+  OV_D_4s = 0x2,
+  OV_D_8s = 0x3,
+};
+
+/**
+ * BQ configuration
+ */
 typedef struct {
-  BmsConfig conf;
-  BmsStatus status;
-} Bms;
+  enum SCD_T scp_threshold;
+  enum SCD_D scp_delay;
+
+  enum OCD_T ocp_threshold;
+  enum OCD_D ocp_delay;
+
+  double uv_threshold;
+  enum UV_D uv_delay;
+
+  double ov_threshold;
+  enum OV_D ov_delay;
+
+  enum TS_SRC temp_source;
+} BQConfig;
 
 /**
- * Initialization of BmsStatus with suitable default values.
+ * Read temperature in Kelvin from internal thermistor
+ * Remeber: bq769x0_change_temperature_source should be called if necessary
+ * @param id - internal thermistor identifier
  *
- * @param bms Pointer to BMS object.
+ * When switching between external and internal temperature monitoring, a 2-s
+ * latency may be incurred due to the natural scheduler update interval.
+ *
+ * @returns temperature value in Kelvin
  */
-void bms_init_status(Bms *bms);
+double bq769x0_read_temperature_internal(enum TS_INT_Id id);
 
 /**
- * Initialization of BmsConfig with typical default values for the given cell
- * type.
+ * Read temperature in Kelvin from external thermistor
+ * Remeber: bq769x0_change_temperature_source should be called if necessary
+ * @param id - external thermistor identifier
+ * @param thermistor_beta - thermistor beta coefficient
+ * @param thermistor_nominal_resistance - thermistor resistance at standard
+ * conditions (25 C)
  *
- * @param bms Pointer to BMS object.
- * @param type One of enum CellType (defined as int so that it can be set via
- * Kconfig).
- * @param nominal_capacity Nominal capacity of the battery pack.
+ * When switching between external and internal temperature monitoring, a 2-s
+ * latency may be incurred due to the natural scheduler update interval.
+ *
+ * @returns temperature value in Kelvin
  */
-void bms_init_config(Bms *bms, int type, float nominal_capacity);
+double bq769x0_read_temperature_external(enum TS_EXT_Id id,
+                                         double thermistor_beta,
+                                         double thermistor_nominal_resistance);
 
 /**
- * Initialization of BMS incl. setup of communication. This function does not
- * yet set any config.
+ * Read voltage in milivolts related with ohms law to current flow
+ * @param milivolts - pointer that will be overwriten with value
  *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
+ * @returns True on success False otherwise
  */
-int bms_init_hardware(Bms *bms);
+bool bq769x0_read_current(double *milivolts);
 
 /**
- * Main BMS state machine
+ * Read battery cell voltage
+ * @param id - cell identifier
  *
- * @param bms Pointer to BMS object.
+ * @returns voltage of cell [V]
  */
-void bms_state_machine(Bms *bms);
+double bq769x0_read_cell_voltage(enum CellId id);
 
 /**
- * Update measurements and check for errors before calling the state machine
+ * Read battery cell voltage
+ * @param num_active_cells - num of connected cells for best error correction
  *
- * Should be called at least once every 250 ms to get correct coulomb counting
- *
- * @param bms Pointer to BMS object.
+ * @returns voltage of pack [V]
  */
-void bms_update(Bms *bms);
+double bq769x0_read_pack_voltage(int num_active_cells);
 
 /**
- * BMS IC start-up delay indicator
+ * Toggle charging mosfet
+ * @param enable - desired state
  *
- * @returns true if we should wait for the BMS IC to start up
+ * @returns True on success False otherwise
  */
-bool bms_startup_inhibit();
+bool bq_chg_switch(bool enable);
 
 /**
- * Shut down BMS IC and entire PCB power supply
+ * Toggle discharging mosfet
+ * @param enable - desired state
+ *
+ * @returns True on success False otherwise
  */
-void bms_shutdown(Bms *bms);
+bool bq_dis_switch(bool enable);
 
 /**
- * Enable/disable charge MOSFET
+ * Set short circuit protection during dicharge
+ * @param threshold - short circuit in discharge threshold
+ * @param delay - short circuit in discharge delay
  *
- * @param bms Pointer to BMS object.
- * @param enable Desired status of the MOSFET.
- *
- * @returns 0 on success, otherwise negative error code.
+ * @returns True on success False otherwise
  */
-int bms_chg_switch(Bms *bms, bool enable);
+bool bq_set_dis_scp(enum SCD_T threshold, enum SCD_D delay);
 
 /**
- * Enable/disable discharge MOSFET
+ * Set over-current protection during dicharge
+ * @param threshold - over-current in discharge threshold
+ * @param delay - over-current in discharge delay
  *
- * @param bms Pointer to BMS object.
- * @param enable Desired status of the MOSFET.
- *
- * @returns 0 on success, otherwise negative error code.
+ * @returns True on success False otherwise
  */
-int bms_dis_switch(Bms *bms, bool enable);
+bool bq_set_dis_ocp(enum OCD_T threshold, enum OCD_D delay);
 
 /**
- * Charging error flags check
+ * Set under-voltage protection
+ * @param uv_threshold - under-voltage [V]
+ * @param uv_delay - under-voltage delay
  *
- * @returns true if any charging error flag is set
+ * @returns True on success False otherwise
  */
-bool bms_chg_error(uint32_t error_flags);
+bool bq_set_uvp(double uv_threshold, enum UV_D uv_delay);
 
 /**
- * Discharging error flags check
+ * Set over-voltage protection
+ * @param ov_threshold - over-voltage [V]
+ * @param ov_delay - over-voltage delay
  *
- * @returns true if any discharging error flag is set
+ * @returns True on success False otherwise
  */
-bool bms_dis_error(uint32_t error_flags);
+bool bq_set_ovp(double ov_threshold, enum OV_D ov_delay);
 
 /**
- * Check if charging is allowed
- *
- * @returns true if no charging error flags are set
+ * Returns system faults object
+ * @returns SYS_STAT_Type
  */
-bool bms_chg_allowed(Bms *bms);
+SYS_STAT_Type bq769x0_system_faults();
 
 /**
- * Check if discharging is allowed
- *
- * @param bms Pointer to BMS object.
- *
- * @returns true if no discharging error flags are set
+ * Clears system faults register
+ * @returns void
  */
-bool bms_dis_allowed(Bms *bms);
+void bq769x0_system_clear_faults(SYS_STAT_Type faults);
 
 /**
- * Balancing limits check
- *
- * @param bms Pointer to BMS object.
- *
- * @returns if balancing is allowed
+ * Sets balancing fets according to flags in balancingFlags
+ * each bit represents flag for one cell starting from 0 ending at 14 index
+ * @returns true if balancing setup is passible (no adjacent cells are balanced
+ * at the same time) false otherwise
  */
-bool bms_balancing_allowed(Bms *bms);
+bool bq769x0_set_cell_balancing(uint16_t balancingFlags);
 
 /**
- * Reset SOC to specified value or calculate based on average cell open circuit
- * voltage
+ * Initialization of bq769x0 IC
  *
- * @param bms Pointer to BMS object.
- * @param percent 0-100 %, -1 for calculation based on OCV
+ * - Determines I2C address
+ * - Sets ALERT pin interrupt
  */
-void bms_soc_reset(Bms *bms, int percent);
+int bq769x0_init(BQConfig *bg_conf);
 
 /**
- * Update SOC based on most recent current measurement
- *
- * Function should be called each time after a new current measurement was
- * obtained.
- *
- * @param bms Pointer to BMS object.
+ * Put bq769x0 IC in shutdown mode
+ * - Can be waken with boot button
  */
-void bms_soc_update(Bms *bms);
-
-/**
- * Apply charge/discharge temperature limits.
- *
- * @param conf BMS configuration containing the limit settings
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_temp_limits(Bms *bms);
-
-/**
- * Apply discharge short circuit protection (SCP) current threshold and delay.
- *
- * If the setpoint does not exactly match a possible setting in the BMS IC, it
- * is rounded to the closest allowed value and this value is written back to the
- * BMS config.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_dis_scp(Bms *bms);
-
-/**
- * Apply discharge overcurrent protection (OCP) threshold and delay.
- *
- * If the setpoint does not exactly match a possible setting in the BMS IC, it
- * is rounded to the closest allowed value and this value is written back to the
- * BMS config.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_dis_ocp(Bms *bms);
-
-/**
- * Apply charge overcurrent protection (OCP) threshold and delay.
- *
- * If the setpoint does not exactly match a possible setting in the BMS IC, it
- * is rounded to the closest allowed value and this value is written back to the
- * BMS config.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_chg_ocp(Bms *bms);
-
-/**
- * Apply cell undervoltage protection (UVP) threshold and delay.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_cell_uvp(Bms *bms);
-
-/**
- * Apply cell overvoltage protection (OVP) threshold and delay.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_cell_ovp(Bms *bms);
-
-/**
- * Apply balancing settings
- *
- * Balancing is automatically enabled by the chip or by the update function as
- * soon as if voltage, temperature and idle citerions are met.
- *
- * @param bms Pointer to BMS object.
- *
- * @returns 0 on success, otherwise negative error code.
- */
-int bms_apply_balancing_conf(Bms *bms);
-
-/**
- * Reads all cell voltages to array cell_voltages[NUM_CELLS], updates
- * battery_voltage and updates ids of cells with min/max voltage
- *
- * @param bms Pointer to BMS object.
- */
-void bms_read_voltages(Bms *bms);
-
-/**
- * Reads pack current and updates coloumb counter and SOC
- *
- * @param bms Pointer to BMS object.
- */
-void bms_read_current(Bms *bms);
-
-/**
- * Reads all temperature sensors
- *
- * @param bms Pointer to BMS object.
- */
-void bms_read_temperatures(Bms *bms);
-
-/**
- * Reads error flags from IC or updates them based on measurements
- *
- * @param bms Pointer to BMS object.
- */
-void bms_update_error_flags(Bms *bms);
-
-/**
- * Tries to handle / resolve errors
- *
- * @param bms Pointer to BMS object.
- */
-void bms_handle_errors(Bms *bms);
-
-/**
- * Print BMS IC register
- *
- * @param addr Address of the register
- */
-void bms_print_register(uint16_t addr);
-
-/**
- * Print all BMS IC registers
- */
-void bms_print_registers();
+void bq_shutdown();
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // BMS_H
+#endif // BQ_H
